@@ -231,56 +231,45 @@
       </div>
 
       <figure class="art">
-        <img id="imagen" src="http://200.104.83.92:8000/static/Peppadiablo.png" alt="Ilustración demoniaca">
+        <img id="imagen" src="http://localhost:8000/static/Peppadiablo.png" alt="Ilustración demoniaca">
       </figure>
     </section>
   </main>
 
   <script>
-    async function cargar() {
-      const url = 'http://200.104.83.92:8000/api-card-demonic/demonic/card/random';
-      try {
-        //const username = 'diablo';
-        //const password = '123';
-        //const auth = btoa(`${username}:${password}`);
+  const BASE_BACKEND = 'http://localhost:8000';  // o la IP real del servidor
 
-        const resp = await fetch(url, {
-        method: 'GET',
-        headers: {
-        Authorization: `Basic ZGlhYmxvOjEyMw==`
-          }
-        });
+  async function cargar() {
+    const url = BASE_BACKEND + '/api-card-demonic/demonic/card/random';
+    try {
+      const resp = await fetch(url, { method: 'GET' }); // sin Authorization si no hay auth en backend
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
 
-        //const resp = await fetch(url, { method: 'GET' });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
+      document.getElementById('nombre').textContent  = data.nombre ?? '¿Sin nombre?';
+      document.getElementById('rango').textContent   = data.rango ?? '—';
+      document.getElementById('fuerza').textContent  = data.fuerza ?? '—';
 
-        document.getElementById('nombre').textContent = data.nombre ?? '¿Sin nombre?';
-        document.getElementById('rango').textContent  = data.rango ?? '—';
-        document.getElementById('fuerza').textContent = data.fuerza ?? '—';
+      const imgUrl = (data.imagen && data.imagen.startsWith('http'))
+        ? data.imagen
+        : (BASE_BACKEND + (data.imagen ?? '/static/Peppadiablo.png'));
+      document.getElementById('imagen').src = imgUrl;
 
-        // Si el backend retorna una ruta relativa en data.imagen, anteponer host
-        const imgUrl = data.imagen?.startsWith('http')
-          ? data.imagen
-          : ('http://200.104.83.92:8000' + (data.imagen ?? '/static/Peppadiablo.png'));
-        document.getElementById('imagen').src = imgUrl;
-
-      } catch (err) {
-        const nombre = document.getElementById('nombre');
-        nombre.textContent = 'Error de invocación: ' + err.message;
-      }
+    } catch (err) {
+      document.getElementById('nombre').textContent = 'Error de invocación: ' + err.message;
     }
+  }
 
-    // Botón para pedir otra carta sin recargar toda la página
-    document.getElementById('btn-recargar').addEventListener('click', cargar);
+  document.getElementById('btn-recargar').addEventListener('click', cargar);
+  document.getElementById('btn-refrescar').addEventListener('click', () => {
+    window.location.href = window.location.pathname + '?t=' + Date.now();
+  });
 
-    // Botón para recargar completamente (evitando caché)
-    document.getElementById('btn-refrescar').addEventListener('click', () => {
-      window.location.href = window.location.pathname + '?t=' + Date.now();
-    });
+  // Imagen inicial también desde backend
+  document.getElementById('imagen').src = BASE_BACKEND + '/static/Peppadiablo.png';
 
-    // Primera carga
-    cargar();
-  </script>
+  cargar();
+</script>
+
 </body>
 </html>
